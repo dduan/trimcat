@@ -58,19 +58,14 @@ for input in inputs {
     }
 }
 
-print(videoForConcat)
-
 let concatTemplate = "file '%@'"
 
 let concatList = videoForConcat
     .map { String(format: concatTemplate, $0) }
     .joined(separator: "\n")
 
-print(concatList)
-
 let concatListFilePath = workPath + "concat_list.txt"
 
-print(concatListFilePath)
 try concatList.write(toFile: concatListFilePath, atomically: true, encoding: .utf8)
 bash("ffmpeg -y -f concat -safe 0 -i \(concatListFilePath) -r 30 \(CommandLine.arguments[1])")
 
