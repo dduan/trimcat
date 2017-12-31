@@ -21,6 +21,18 @@
 
 import Foundation
 
+let options = Set(CommandLine.arguments[1...]).filter { $0.hasPrefix("-") }
+guard let outputPath = (CommandLine.arguments[1...]
+    .filter { !$0.hasPrefix("-") }
+    .first) else
+{
+    print("Include a file path for output")
+    exit(1)
+}
+
+let silent = options.contains("-s") || options.contains("--silent") ? "--loglevel panic " : ""
+let copy = options.contains("-c") || options.contains("--copy") ? "-c copy " : ""
+
 @discardableResult
 func bash(_ command: String) -> Int32 {
     let task = Process()
@@ -52,7 +64,7 @@ for input in inputs {
     case let (path, .some(start), .some(end)):
         videoForConcat.append(workPath + fileName)
         let trimPath = workPath + fileName
-        bash("ffmpeg -i \(path) -ss \(start) -to \(end) -r 30 \(trimPath)")
+        bash("ffmpeg -i \(path) -ss \(start) -to \(end) -r 30 \(silent)\(trimPath)")
     default:
         videoForConcat.append(input.0)
     }
@@ -67,6 +79,6 @@ let concatList = videoForConcat
 let concatListFilePath = workPath + "concat_list.txt"
 
 try concatList.write(toFile: concatListFilePath, atomically: true, encoding: .utf8)
-bash("ffmpeg -y -f concat -safe 0 -i \(concatListFilePath) -r 30 \(CommandLine.arguments[1])")
 
+bash("ffmpeg -y -f concat -safe 0 -i \(concatListFilePath) -r 30 \(silent)\(copy)\(outputPath)")
 print("Temporary files are in \(workPath)")
